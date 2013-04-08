@@ -1,0 +1,601 @@
+<!--
+/******************************************************************************
+*                                                                             *
+*                           Copyright by Sneezry                              *
+*                            Publish under GPL.                               *
+*                                 2013.4.8                                    *
+*                                                                             *
+*                                                   sneezry.com               *
+*                                                 lizhe@lizhe.org             *
+*                                                                             *
+******************************************************************************/
+-->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>格仑布</title>
+</head>
+<body>
+<div>
+<canvas id="stitch" style="display:none;"></canvas>
+<canvas id="canvas" style="display:none;"></canvas>
+<img id="imgoutput" style="display:none;" />
+</div>
+<iframe name="upload" style="display:none;"></iframe>
+<div>
+<form target="upload" action="/upload.php" method="POST" enctype="multipart/form-data">
+<input onchange="getimage(this.files);this.form.reset();" type="file" name="image" accept="image/png, image/x-png, image/jpeg, image/pjpeg, image/pipeg, image/gif" />
+</form>
+</div>
+<div>
+规格：
+<select id="gg">
+<option value="0">9CT</option>
+<option value="1">10CT</option>
+<option value="2">11CT</option>
+<option value="3">14CT</option>
+<option value="4">18CT</option>
+</select>
+高度（厘米）：
+<input id="dh" type="text" value="30" />
+宽度（厘米）：
+<input id="dw" type="text" value="自动" disabled />
+</div>
+<div><input type="text" id="sx" disabled />格×<input type="text" id="sy" disabled />格 <input type="checkbox" id="scode" checked>显示数字 <input type="checkbox" id="sborder" checked>显示网格</div>
+<div id="line"></div>
+<script>
+var I;
+var dmc;
+
+function getimage(files){
+	var file = files[0];
+	var fr = new FileReader();
+	fr.readAsDataURL(file);
+	fr.onload = function(){
+		var newImage = new Image();
+		newImage.src = fr.result;
+		newImage.onload = function(){
+			var height = newImage.height;
+			var width = newImage.width;
+			var canvas = document.getElementById("canvas");
+			var context = canvas.getContext("2d");
+			context.fillStyle = "#FFFFFF";
+			context.fillRect(0, 0, width, height);
+			canvas.height = height;
+			canvas.width = width;
+			context.drawImage(newImage, 0, 0);
+			I = context.getImageData(0, 0, width, height);
+			document.getElementById("line").innerHTML = "";
+			getstitch();
+		}
+	}
+}
+
+function getstitch(){
+	dmc = [
+		{code:"310",name:"Black",rgb:"000000"},
+		{code:"939",name:"Navy Blue-Vy DK",rgb:"000031"},
+		{code:"823",name:"Navy Blue-DK",rgb:"000049"},
+		{code:"311",name:"Navy Blue-MD",rgb:"004F61"},
+		{code:"699",name:"Chirstmas Green",rgb:"005B06"},
+		{code:"700",name:"Christmas Green-BRT",rgb:"00602F"},
+		{code:"580",name:"Moss Green-DK",rgb:"006700"},
+		{code:"995",name:"Electric Blue-DK",rgb:"007B86"},
+		{code:"958",name:"Sea Green-DK",rgb:"00A082"},
+		{code:"943",name:"Aquamarine-MD",rgb:"00A275"},
+		{code:"3750",name:"Antique Blue-VY DK",rgb:"0C5B6C"},
+		{code:"517",name:"Wedgewood-MD",rgb:"107F87"},
+		{code:"3766",name:"Peacock Blue-LT",rgb:"18656F"},
+		{code:"3765",name:"Peacock Blue-VY DK",rgb:"188086"},
+		{code:"820",name:"Royal Blue-VY DK",rgb:"1E3655"},
+		{code:"796",name:"Royal Blue-DK",rgb:"1E3A5F"},
+		{code:"797",name:"Royal Blue",rgb:"1E4263"},
+		{code:"806",name:"Peacock Blue-DK",rgb:"1E8285"},
+		{code:"336",name:"Navy Blue",rgb:"244967"},
+		{code:"500",name:"Blue Green-VY DK",rgb:"2B3929"},
+		{code:"991",name:"Aquamarine-DK",rgb:"2F5B49"},
+		{code:"910",name:"Emerald Green-DK",rgb:"30745B"},
+		{code:"909",name:"Emerald Green-VY DK",rgb:"316955"},
+		{code:"911",name:"Emerald Green-MD",rgb:"318061"},
+		{code:"520",name:"Fern Green-DK",rgb:"374912"},
+		{code:"986",name:"Forest Green-VY DK",rgb:"3A5241"},
+		{code:"312",name:"Navy Blue-LT",rgb:"3A5467"},
+		{code:"561",name:"Jade-VY DK",rgb:"3B604C"},
+		{code:"327",name:"Violet-DK",rgb:"3D0067"},
+		{code:"934",name:"Black Avocado Green",rgb:"3E3B28"},
+		{code:"935",name:"Avocado Green-DK",rgb:"433F2F"},
+		{code:"501",name:"Blue Green-DK",rgb:"435549"},
+		{code:"936",name:"Avocado Green--VY D",rgb:"454531"},
+		{code:"791",name:"Cornflower Blue-VYD",rgb:"47375D"},
+		{code:"824",name:"Blue-VY DK",rgb:"476174"},
+		{code:"937",name:"Avocado Green-MD",rgb:"495637"},
+		{code:"904",name:"Parrot Green-VY DK",rgb:"4E5F39"},
+		{code:"890",name:"Pistachio Grn-ULT D",rgb:"4F564C"},
+		{code:"701",name:"Christmas Green-LT",rgb:"4F6C45"},
+		{code:"702",name:"Kelly Green",rgb:"4F7942"},
+		{code:"3799",name:"Pewter Grey - VY DK",rgb:"514C53"},
+		{code:"322",name:"Navy Blue-VY LT",rgb:"516D87"},
+		{code:"3371",name:"Black Brown",rgb:"532510"},
+		{code:"987",name:"Forest Green-DK",rgb:"536149"},
+		{code:"3031",name:"Mocha Brown-VY DK",rgb:"543817"},
+		{code:"3051",name:"Green Grey-DK",rgb:"554900"},
+		{code:"535",name:"Ash Grey - VY LT",rgb:"555559"},
+		{code:"319",name:"Pistachio Grn-VY DK",rgb:"555F52"},
+		{code:"825",name:"Blue-DK",rgb:"556C80"},
+		{code:"924",name:"Grey Green--VY DK",rgb:"566364"},
+		{code:"895",name:"Hunter Green-VY DK",rgb:"595C4E"},
+		{code:"3768",name:"Grey Green-DK",rgb:"5C6E6C"},
+		{code:"838",name:"Beige Brown-VY DK",rgb:"5E381B"},
+		{code:"367",name:"Pistachio Green-DK",rgb:"5F705B"},
+		{code:"3362",name:"Pine Green-DK",rgb:"605F54"},
+		{code:"926",name:"Grey Green-LT",rgb:"607473"},
+		{code:"792",name:"Cornflower Blue-DK",rgb:"616180"},
+		{code:"3345",name:"Hunter Green-DK",rgb:"616452"},
+		{code:"562",name:"Jade-MD",rgb:"618661"},
+		{code:"905",name:"Parrot Green-DK",rgb:"627739"},
+		{code:"938",name:"Coffee Brown-ULT DK",rgb:"632710"},
+		{code:"930",name:"Antique Blue-DK",rgb:"667A8C"},
+		{code:"3760",name:"Wedgewood",rgb:"668E98"},
+		{code:"518",name:"Wedgewood-LT",rgb:"66949A"},
+		{code:"798",name:"Delft-DK",rgb:"67738D"},
+		{code:"844",name:"Beaver Brown -ULT D",rgb:"6B6766"},
+		{code:"550",name:"Violet-VY LT",rgb:"6D1261"},
+		{code:"839",name:"Beige Brown-DK",rgb:"6D4227"},
+		{code:"413",name:"Pewter Grey - DK",rgb:"6D5F5F"},
+		{code:"3781",name:"Mocha Brown-DK",rgb:"71472A"},
+		{code:"645",name:"Beaver Grey - VY DK",rgb:"717171"},
+		{code:"3021",name:"Brown Grey - VY DK",rgb:"735B5D"},
+		{code:"826",name:"Blue-MD",rgb:"738A99"},
+		{code:"334",name:"Baby Blue-MD",rgb:"738CAA"},
+		{code:"912",name:"Emerald Green-LT",rgb:"739E73"},
+		{code:"469",name:"Avocado Green",rgb:"74725C"},
+		{code:"3363",name:"Pine Green-MD",rgb:"747F60"},
+		{code:"898",name:"Coffee Brown-VY DK",rgb:"763713"},
+		{code:"3346",name:"Hunter Green",rgb:"78866B"},
+		{code:"646",name:"Beaver Grey-DK",rgb:"797979"},
+		{code:"703",name:"Chartreuse",rgb:"79904C"},
+		{code:"801",name:"Coffee Brown-DK",rgb:"7B4714"},
+		{code:"3011",name:"Khaki Green-DK",rgb:"7B5B40"},
+		{code:"931",name:"Antique Blue-MD",rgb:"7C8791"},
+		{code:"333",name:"Blue Violet-VY DK",rgb:"7F5482"},
+		{code:"840",name:"Beige Brown-MD",rgb:"80551E"},
+		{code:"597",name:"Turquoise",rgb:"809784"},
+		{code:"3347",name:"Yellow Green-MD",rgb:"809873"},
+		{code:"807",name:"Peacock Blue",rgb:"80A7A0"},
+		{code:"829",name:"Golden Olive-VY DK",rgb:"825A08"},
+		{code:"730",name:"Olive Green-VY DK",rgb:"846600"},
+		{code:"799",name:"Delft-MD",rgb:"849CB6"},
+		{code:"470",name:"Avocado Green-LT",rgb:"858F6C"},
+		{code:"988",name:"Forest Green-MD",rgb:"86916E"},
+		{code:"989",name:"Forest Green",rgb:"86996E"},
+		{code:"502",name:"Blue Green",rgb:"869E86"},
+		{code:"830",name:"Golden Olive-DK",rgb:"885F12"},
+		{code:"3052",name:"Green Grey--MD",rgb:"898D72"},
+		{code:"902",name:"Granet-VY DK",rgb:"8A184D"},
+		{code:"320",name:"Pistachio Green-MD",rgb:"8A9978"},
+		{code:"3787",name:"Brown Grey - DK",rgb:"8B6D73"},
+		{code:"420",name:"Hazel Nut Brown-DK",rgb:"8C5B2B"},
+		{code:"731",name:"Olive Green-DK",rgb:"8C6700"},
+		{code:"3790",name:"Beige Grey - ULT DK",rgb:"8C756D"},
+		{code:"300",name:"Mahogany-VY DK",rgb:"8F3926"},
+		{code:"906",name:"Parrot Green-MD",rgb:"8FA359"},
+		{code:"831",name:"Golden Olive-MD",rgb:"906712"},
+		{code:"732",name:"Olive Green",rgb:"916800"},
+		{code:"341",name:"Blue Violet-LT",rgb:"91B4C5"},
+		{code:"552",name:"Violet-MD",rgb:"925582"},
+		{code:"992",name:"Aquamarine",rgb:"92B7A5"},
+		{code:"793",name:"Cornflower Blue-MD",rgb:"938BA4"},
+		{code:"208",name:"Lavender-VY DK",rgb:"945B80"},
+		{code:"3746",name:"Blue Violet-DK",rgb:"9566A2"},
+		{code:"433",name:"Brown-MD",rgb:"975414"},
+		{code:"610",name:"Drab Brown - VY DK",rgb:"976854"},
+		{code:"581",name:"Moss Green",rgb:"979831"},
+		{code:"868",name:"Hazel Nut Brown-VYD",rgb:"995C30"},
+		{code:"869",name:"Hazel Nut Brn-VY DK",rgb:"995C30"},
+		{code:"913",name:"Nile Green-MD",rgb:"99BC95"},
+		{code:"221",name:"Shell Pink-VY DK",rgb:"9C294A"},
+		{code:"3740",name:"Antique Violet-DK",rgb:"9C7D85"},
+		{code:"400",name:"Mahogany-DK",rgb:"9D3C27"},
+		{code:"975",name:"Golden Brown-DK",rgb:"9E4312"},
+		{code:"611",name:"Drab Brown - DK",rgb:"9E6D5B"},
+		{code:"3755",name:"Baby Blue",rgb:"9EB0CE"},
+		{code:"522",name:"Fern Green",rgb:"9FA98E"},
+		{code:"553",name:"Violet",rgb:"A06492"},
+		{code:"3685",name:"Mauve-DK",rgb:"A1354F"},
+		{code:"3364",name:"Pine Green",rgb:"A1A787"},
+		{code:"814",name:"Garnet-DK",rgb:"A20058"},
+		{code:"632",name:"Negro Flesh-MD",rgb:"A24D34"},
+		{code:"340",name:"Blue Violet-MD",rgb:"A279A4"},
+		{code:"315",name:"Antique Mauve-VY DK",rgb:"A35A5B"},
+		{code:"640",name:"Beige Grey - VY DK",rgb:"A3A39D"},
+		{code:"704",name:"Chartreuse-BRT",rgb:"A5A467"},
+		{code:"815",name:"Garnet-MD",rgb:"A6005B"},
+		{code:"317",name:"Pewter Grey",rgb:"A78B88"},
+		{code:"414",name:"Steel Grey - DK",rgb:"A78B88"},
+		{code:"918",name:"Red Copper-DK",rgb:"A8444C"},
+		{code:"915",name:"Plum-DK",rgb:"AA185B"},
+		{code:"3012",name:"Khaki Green-MD",rgb:"AA8667"},
+		{code:"954",name:"Nile Green",rgb:"AAD5A4"},
+		{code:"996",name:"Electric Blue-MD",rgb:"AADEE1"},
+		{code:"917",name:"Plum-MD",rgb:"AB165F"},
+		{code:"959",name:"Sea Green-MD",rgb:"ABCEB1"},
+		{code:"3022",name:"Brown Grey - MD",rgb:"ACACAA"},
+		{code:"523",name:"Fern Green-LT",rgb:"ACB78E"},
+		{code:"3772",name:"Negro Flesh",rgb:"AD533E"},
+		{code:"642",name:"Beige Grey - DK",rgb:"AEB0AA"},
+		{code:"813",name:"Blue-LT",rgb:"AFC3CD"},
+		{code:"471",name:"Avocado Green-VY LT",rgb:"B0BB8C"},
+		{code:"434",name:"Brown-LT",rgb:"B26746"},
+		{code:"832",name:"Golden Olive",rgb:"B27737"},
+		{code:"816",name:"Garnet",rgb:"B3005B"},
+		{code:"451",name:"Shell Grey - DK",rgb:"B3978F"},
+		{code:"919",name:"Red Copper",rgb:"B44B52"},
+		{code:"780",name:"Topaz-ULT VY DK",rgb:"B5622E"},
+		{code:"781",name:"Topaz-VY DK",rgb:"B56B38"},
+		{code:"368",name:"Pistachio Green-LT",rgb:"B5CEA2"},
+		{code:"932",name:"Antique Blue-LT",rgb:"B6BAC2"},
+		{code:"563",name:"Jade-LT",rgb:"B6D4B4"},
+		{code:"3721",name:"Shell Pink-DK",rgb:"B84B4D"},
+		{code:"3722",name:"Shell Pink-MD",rgb:"B85958"},
+		{code:"370",name:"Mustard - MD",rgb:"B88A57"},
+		{code:"907",name:"Parrot Green-LT",rgb:"B9C866"},
+		{code:"498",name:"Christmas Red-LT",rgb:"BB0061"},
+		{code:"435",name:"Brown-VY LT",rgb:"BB6B39"},
+		{code:"3053",name:"Green Grey",rgb:"BBB394"},
+		{code:"794",name:"Cornflower Blue-LT",rgb:"BBD0DA"},
+		{code:"304",name:"Christmas Red-MD",rgb:"BC0061"},
+		{code:"326",name:"Rose-VY DP",rgb:"BC1641"},
+		{code:"3328",name:"Salmon-DK",rgb:"BC4055"},
+		{code:"841",name:"Beige Brown-LT",rgb:"BC866B"},
+		{code:"3032",name:"Mocha Brown-MD",rgb:"BC9C78"},
+		{code:"355",name:"Terra Cotta-DK",rgb:"BD492F"},
+		{code:"3041",name:"Antique Violet-MD",rgb:"BE9BA7"},
+		{code:"647",name:"Beaver Grey - MD",rgb:"BEBEB9"},
+		{code:"809",name:"Delft",rgb:"BEC1CD"},
+		{code:"3777",name:"Terra Cotta-VY DK",rgb:"BF4024"},
+		{code:"993",name:"Aquamarine-LT",rgb:"C0E0C8"},
+		{code:"347",name:"Salmon-VY DK",rgb:"C22443"},
+		{code:"3064",name:"Sportsman Flsh-VY D",rgb:"C2654C"},
+		{code:"407",name:"Sportsman Flsh-VY D",rgb:"C2654C"},
+		{code:"3752",name:"Antique Blue-VY LT",rgb:"C2D1CE"},
+		{code:"519",name:"Sky Blue",rgb:"C2D1CF"},
+		{code:"3726",name:"Antique Mauve-DK",rgb:"C3767B"},
+		{code:"503",name:"Blue Green-MD",rgb:"C3CEB7"},
+		{code:"371",name:"Mustard",rgb:"C49B64"},
+		{code:"920",name:"Copper-MD",rgb:"C55E58"},
+		{code:"318",name:"Steel Grey - LT",rgb:"C5C6BE"},
+		{code:"3023",name:"Brown Grey - LT",rgb:"C6BEAD"},
+		{code:"720",name:"Orange Spice-DK",rgb:"C8242B"},
+		{code:"927",name:"Grey Green-LT",rgb:"C8C6C2"},
+		{code:"3350",name:"Dusty Rose-ULT DK",rgb:"C94F5B"},
+		{code:"648",name:"Beaver Grey-LT",rgb:"CACACA"},
+		{code:"3325",name:"Baby Blue-LT",rgb:"CAE2E5"},
+		{code:"3687",name:"Mauve",rgb:"CB4E61"},
+		{code:"612",name:"Drab Brown - MD",rgb:"CB9867"},
+		{code:"372",name:"Mustard - LT",rgb:"CBA26B"},
+		{code:"782",name:"Topaz-DK",rgb:"CC7742"},
+		{code:"524",name:"Fern Green-VY LT",rgb:"CDB69E"},
+		{code:"900",name:"Burnt Orange-DK",rgb:"CE2B00"},
+		{code:"921",name:"Copper",rgb:"CE675B"},
+		{code:"209",name:"Lavender-DK",rgb:"CE94BA"},
+		{code:"733",name:"Olive Green-MD",rgb:"CE9B61"},
+		{code:"3782",name:"Mocho Brown-LT",rgb:"CEAF90"},
+		{code:"966",name:"Baby Green-MD",rgb:"CED5B0"},
+		{code:"504",name:"Blue Green-LT",rgb:"CEDDC1"},
+		{code:"600",name:"Cranberry-VY DK",rgb:"D0396A"},
+		{code:"3013",name:"Khaki Green-LT",rgb:"D0C3A4"},
+		{code:"598",name:"Turquoise-LT",rgb:"D0DFCD"},
+		{code:"964",name:"Sea Green-LT",rgb:"D0E0D2"},
+		{code:"3731",name:"Dusty Rose-VY DK",rgb:"D15D67"},
+		{code:"301",name:"Mahogany-MD",rgb:"D16654"},
+		{code:"680",name:"Old Gold-DK",rgb:"D18C67"},
+		{code:"452",name:"Shell Grey - MD",rgb:"D2B9AF"},
+		{code:"3024",name:"Brown Grey - VY LT",rgb:"D2D0CD"},
+		{code:"666",name:"Christmas Red-LT",rgb:"D52756"},
+		{code:"827",name:"Blue-VY LT",rgb:"D5E7E8"},
+		{code:"309",name:"Rose-DP",rgb:"D62B5B"},
+		{code:"955",name:"Nile Green-LT",rgb:"D6E6CC"},
+		{code:"564",name:"Jade-VY LT",rgb:"D6E6CC"},
+		{code:"3045",name:"Yellow Beige-DK",rgb:"D89769"},
+		{code:"817",name:"Coral Red-VY DK",rgb:"DB1855"},
+		{code:"335",name:"Rose",rgb:"DB244F"},
+		{code:"718",name:"Plum",rgb:"DB3779"},
+		{code:"223",name:"Shell Pink-LT",rgb:"DB8073"},
+		{code:"613",name:"Drab Brown - LT",rgb:"DBB07A"},
+		{code:"833",name:"Golden Olive-LT",rgb:"DBB680"},
+		{code:"842",name:"Beige Brown-VY LT",rgb:"DBC2A4"},
+		{code:"349",name:"Coral-DK",rgb:"DC3D5B"},
+		{code:"316",name:"Antique Mauve-MD",rgb:"DC8D8D"},
+		{code:"3776",name:"Mahogony-LT",rgb:"DD6D5B"},
+		{code:"734",name:"Olive Green-LT",rgb:"DDA66B"},
+		{code:"415",name:"Pearl Grey",rgb:"DDDDDA"},
+		{code:"601",name:"Cranberry-DK",rgb:"DE3969"},
+		{code:"644",name:"Beige Grey-MD",rgb:"E0E0D7"},
+		{code:"783",name:"Topaz-MD",rgb:"E19255"},
+		{code:"3042",name:"Antique Violet-LT",rgb:"E1CDC8"},
+		{code:"928",name:"Grey Green--VY LT",rgb:"E1E0D8"},
+		{code:"3348",name:"Yellow Green-LT",rgb:"E1F9BE"},
+		{code:"356",name:"Terra Cotta-MD",rgb:"E2725B"},
+		{code:"3761",name:"Sky Blue-LT",rgb:"E3EAE6"},
+		{code:"3046",name:"Yellow Beige-MD",rgb:"E5C18B"},
+		{code:"3712",name:"Salmon-MD",rgb:"E6656B"},
+		{code:"3747",name:"Blue Violet-VY LT",rgb:"E6ECE8"},
+		{code:"321",name:"Christmas Red",rgb:"E71261"},
+		{code:"3607",name:"Plum-LT",rgb:"E74F86"},
+		{code:"602",name:"Cranberry-MD",rgb:"E7547A"},
+		{code:"3773",name:"Sportsman Flsh-MD",rgb:"E78667"},
+		{code:"436",name:"Tan",rgb:"E79873"},
+		{code:"772",name:"Pine Green--LT",rgb:"E7F9CB"},
+		{code:"762",name:"Pearl Grey - VY LT",rgb:"E8E8E5"},
+		{code:"899",name:"Rose-MD",rgb:"E96D73"},
+		{code:"3072",name:"Beaver Grey - VY LT",rgb:"E9E9DF"},
+		{code:"800",name:"Delft-PALE",rgb:"E9EEE9"},
+		{code:"3341",name:"Apricot",rgb:"EBACA2"},
+		{code:"453",name:"Shell Grey - LT",rgb:"EBCFB9"},
+		{code:"3743",name:"Antique Violet-VY L",rgb:"EBEBE7"},
+		{code:"210",name:"Lavender-MD",rgb:"ECCFE1"},
+		{code:"350",name:"Coral-MD",rgb:"ED455A"},
+		{code:"3778",name:"Terra Cotta-LT",rgb:"ED7A64"},
+		{code:"922",name:"Copper-LT",rgb:"ED8673"},
+		{code:"422",name:"Hazel Nut Brown-LT",rgb:"EDAC7B"},
+		{code:"828",name:"Blue-ULT VY LT",rgb:"EDF7EE"},
+		{code:"3753",name:"Ant. Blue-ULT VY LT",rgb:"EDF7F7"},
+		{code:"437",name:"Tan-LT",rgb:"EEAB79"},
+		{code:"472",name:"Avocado Green-ULT L",rgb:"EEFFB6"},
+		{code:"950",name:"Sportsman Flesh",rgb:"EFA27F"},
+		{code:"543",name:"Beige Brown-UL VY L",rgb:"EFD6BC"},
+		{code:"3033",name:"Mocha Brown-VY LT",rgb:"EFDBBE"},
+		{code:"747",name:"Sky Blue-VY LT",rgb:"F0F7EF"},
+		{code:"891",name:"Carnation-DK",rgb:"F13154"},
+		{code:"834",name:"Golden Olive-VY LT",rgb:"F2D18E"},
+		{code:"822",name:"Beige Grey-LT",rgb:"F2EADB"},
+		{code:"961",name:"Dusty Rose-DK",rgb:"F36C7B"},
+		{code:"893",name:"Carnation-LT",rgb:"F3959D"},
+		{code:"729",name:"Old Gold-MD",rgb:"F3B080"},
+		{code:"554",name:"Violet-LT",rgb:"F3CEE1"},
+		{code:"211",name:"Lavender-LT",rgb:"F3DAE4"},
+		{code:"369",name:"Pistachio Grn-VY LT",rgb:"F3FAD1"},
+		{code:"946",name:"Burnt Orange-MD",rgb:"F44900"},
+		{code:"738",name:"Tan-VY LT",rgb:"F4C38B"},
+		{code:"739",name:"Tan-ULT VY LT",rgb:"F4E9CA"},
+		{code:"712",name:"Cream",rgb:"F5F0DB"},
+		{code:"976",name:"Golden Brown-MD",rgb:"F68D39"},
+		{code:"746",name:"Off White",rgb:"F6EADB"},
+		{code:"3608",name:"Plum-VY LT",rgb:"F798B6"},
+		{code:"775",name:"Baby Blue-VY LT",rgb:"F7F6F8"},
+		{code:"819",name:"Baby Pink-LT",rgb:"F8F7DD"},
+		{code:"3756",name:"Baby Blue-ULT VY LT",rgb:"F8F8FC"},
+		{code:"892",name:"Carnation-MD",rgb:"F95A61"},
+		{code:"760",name:"Salmon",rgb:"F9A092"},
+		{code:"3688",name:"Mauve-MD",rgb:"FA9790"},
+		{code:"754",name:"Peach Flesh-LT",rgb:"FBE3D1"},
+		{code:"962",name:"Dusty Rose-MD",rgb:"FD868D"},
+		{code:"3713",name:"Salmon-VY LT",rgb:"FDE5D9"},
+		{code:"3708",name:"Melon-LT",rgb:"FED4DB"},
+		{code:"606",name:"Bright Orange-Red",rgb:"FF0000"},
+		{code:"3705",name:"Melon-DK",rgb:"FF555B"},
+		{code:"608",name:"Bright Orange",rgb:"FF5B00"},
+		{code:"947",name:"Burnt Orange",rgb:"FF5B00"},
+		{code:"971",name:"Pumpkin",rgb:"FF6A00"},
+		{code:"956",name:"Geranium",rgb:"FF6D73"},
+		{code:"721",name:"Orange Spice-MD",rgb:"FF7361"},
+		{code:"603",name:"Cranberry",rgb:"FF738C"},
+		{code:"970",name:"Pumpkin-LT",rgb:"FF7518"},
+		{code:"3340",name:"Apricot-MD",rgb:"FF7B67"},
+		{code:"3706",name:"Melon-MD",rgb:"FF806D"},
+		{code:"351",name:"Coral",rgb:"FF8087"},
+		{code:"740",name:"Tangerine",rgb:"FF8313"},
+		{code:"741",name:"Tangerine-MD",rgb:"FF8E04"},
+		{code:"972",name:"Canary-DP",rgb:"FF9200"},
+		{code:"722",name:"Orange Spice-LT",rgb:"FF926D"},
+		{code:"3733",name:"Dusty Rose",rgb:"FF9A94"},
+		{code:"352",name:"Coral-LT",rgb:"FF9D90"},
+		{code:"3326",name:"Rose-LT",rgb:"FF9D96"},
+		{code:"977",name:"Golden Brown-LT",rgb:"FFA449"},
+		{code:"444",name:"Lemon-DK",rgb:"FFB000"},
+		{code:"758",name:"Terra Cotta-VY LT",rgb:"FFB193"},
+		{code:"3779",name:"Ter. Cotta-ULT VY L",rgb:"FFB198"},
+		{code:"776",name:"Pink-MD",rgb:"FFB1AE"},
+		{code:"742",name:"Tangerine-LT",rgb:"FFB755"},
+		{code:"604",name:"Cranberry-LT",rgb:"FFBDCA"},
+		{code:"402",name:"Mahogany-VY LT",rgb:"FFBEA4"},
+		{code:"973",name:"Canary-BRT",rgb:"FFC243"},
+		{code:"894",name:"Carnation-VY LT",rgb:"FFC2BF"},
+		{code:"353",name:"Peach Flesh",rgb:"FFC4B8"},
+		{code:"224",name:"Shell Pink-VY LT",rgb:"FFC7B0"},
+		{code:"778",name:"Antique Mauve-VY LT",rgb:"FFC7B8"},
+		{code:"3727",name:"Antique Mauve-LT",rgb:"FFC7C4"},
+		{code:"725",name:"Topaz",rgb:"FFC87C"},
+		{code:"761",name:"Salmon-LT",rgb:"FFC9BC"},
+		{code:"957",name:"Gernanium-PALE",rgb:"FFCCD0"},
+		{code:"676",name:"Old Gold-LT",rgb:"FFCE9E"},
+		{code:"945",name:"Flesh-MD",rgb:"FFCEA4"},
+		{code:"605",name:"Cranberry-VY LT",rgb:"FFCFD6"},
+		{code:"3716",name:"Dusty Rose-VY LT",rgb:"FFD3D4"},
+		{code:"3689",name:"Mauve-LT",rgb:"FFD5D8"},
+		{code:"3354",name:"Dusty Rose-LT",rgb:"FFD6D1"},
+		{code:"3609",name:"Plum-ULT LT",rgb:"FFD6E5"},
+		{code:"3774",name:"Sportsman Flsh-VY L",rgb:"FFDCC1"},
+		{code:"726",name:"Topaz-LT",rgb:"FFE080"},
+		{code:"951",name:"Flesh",rgb:"FFE5BC"},
+		{code:"743",name:"Yellow-MD",rgb:"FFE692"},
+		{code:"307",name:"Lemon",rgb:"FFE76D"},
+		{code:"677",name:"Old Gold-VY LT",rgb:"FFE7B6"},
+		{code:"963",name:"Dusty Rose-ULT VY L",rgb:"FFE9E9"},
+		{code:"818",name:"Baby Pink",rgb:"FFEAEB"},
+		{code:"727",name:"Topaz-VY LT",rgb:"FFEBA8"},
+		{code:"3047",name:"Yellow Beige-LT",rgb:"FFECD3"},
+		{code:"744",name:"Yellow-PALE",rgb:"FFEFAA"},
+		{code:"745",name:"Yellow-LT PALE",rgb:"FFF0C5"},
+		{code:"225",name:"Shell Pink-ULT VY L",rgb:"FFF0E4"},
+		{code:"948",name:"Peach Flesh-VY LT",rgb:"FFF3E7"},
+		{code:"3770",name:"Flesh-VY LT",rgb:"FFFAE0"},
+		{code:"445",name:"Lemon-LT",rgb:"FFFFBE"},
+		{code:"3078",name:"Golden Yellow-VY LT",rgb:"FFFFDC"},
+		{code:"0",name:"Blanc White",rgb:"FFFFFF"}
+	];
+	var canvas = document.getElementById("canvas");
+	var height = canvas.height;
+	var width = canvas.width;
+	var gg = document.getElementById("gg").value;
+	var dh = document.getElementById("dh").value;
+	document.getElementById("dw").value = Math.floor(width/height*dh);
+	var gsize = new Array(0.28, 0.255, 0.23, 0.18, 0.15);
+	var hn = Math.ceil(dh/gsize[gg]);
+	var wn = Math.ceil(width/height*hn);
+	var minpx = Math.ceil(height/hn);
+	var stitch = document.getElementById("stitch");
+	var scontext = stitch.getContext("2d");
+	stitch.height = Math.floor(height/minpx)*24;
+	stitch.width = Math.floor(width/minpx)*24;
+	scontext.fillStyle = "#FFFFFF";
+	scontext.fillRect(0, 0, Math.ceil(width/minpx)*24, Math.ceil(height/minpx)*24);
+	document.getElementById("sx").value = wn;
+	document.getElementById("sy").value = hn;
+	document.getElementById("stitch").style.display = "block";
+	setcolor(0, 0, wn, hn, minpx);
+}
+
+function setcolor(px, py, wn, hn, minpx){
+	var canvas = document.getElementById("canvas");
+	var context = canvas.getContext("2d");
+	var stitch = document.getElementById("stitch");
+	var scontext = stitch.getContext("2d");
+	var height = canvas.height;
+	var width = canvas.width;
+	var red = 0;
+	var green = 0;
+	var blue = 0;
+	var i=0;
+	for(y=0; y<minpx; y++){
+		for(x=0; x<minpx; x++){
+			i = (width*(py*minpx+y)+px*minpx+x)*4;
+			red += I.data[i];
+			green += I.data[i+1];
+			blue += I.data[i+2];
+		}
+	}
+	red = (red/minpx/minpx).toFixed(0);
+	green = (green/minpx/minpx).toFixed(0);
+	blue = (blue/minpx/minpx).toFixed(0);
+	
+	var k, min=-1, r, g, b, tc, tt, ts;
+	for(k=0; k<dmc.length; k++){
+		tc = dmc[k].rgb;
+		r = tc.substr(0,2);
+		g = tc.substr(2,2);
+		b = tc.substr(4,2);
+		r = parseInt(r, 16);
+		g = parseInt(g, 16);
+		b = parseInt(b, 16);
+		tt = ((r-red)*(r-red)+(g-green)*(g-green)+(b-blue)*(b-blue))/3;
+		if(tt==0){
+			ts = k;
+			break;
+		}
+		if(min>tt || min<0){
+			min = tt;
+			ts = k;
+		}
+	}
+	var color = dmc[ts].rgb;
+	if(dmc[ts].num){
+		dmc[ts].num++;
+	}
+	else{
+		dmc[ts].num = 1;
+	}
+	var scode = ts.toString(16);
+	if(scode.length == 1){
+		scode = "00"+scode;
+	}
+	else if(scode.length == 2){
+		scode = "0"+scode;
+	}
+	scontext.fillStyle = color;
+	scontext.strokeStyle = "#888888";
+	scontext.lineWidth = 1;
+	scontext.fillRect(px*24, py*24, 24, 24);
+	if(document.getElementById("sborder").checked){
+		scontext.strokeRect(px*24, py*24, 24, 24);
+		if((px)%10 == 0){
+			scontext.strokeStyle = "#000000";
+			scontext.beginPath();
+			scontext.moveTo(px*24, py*24);
+			scontext.lineTo(px*24, py*24+24);
+			scontext.closePath();
+			scontext.stroke();
+		}
+		else if((px+1)%10 == 0){
+			scontext.strokeStyle = "#000000";
+			scontext.beginPath();
+			scontext.moveTo(px*24+24, py*24);
+			scontext.lineTo(px*24+24, py*24+24);
+			scontext.closePath();
+			scontext.stroke();
+		}
+		if((py)%10 == 0){
+			scontext.strokeStyle = "#000000";
+			scontext.beginPath();
+			scontext.moveTo(px*24, py*24);
+			scontext.lineTo(px*24+24, py*24);
+			scontext.closePath();
+			scontext.stroke();
+		}
+		else if((py+1)%10 == 0){
+			scontext.strokeStyle = "#000000";
+			scontext.beginPath();
+			scontext.moveTo(px*24, py*24+24);
+			scontext.lineTo(px*24+24, py*24+24);
+			scontext.closePath();
+			scontext.stroke();
+		}
+	}
+	if(document.getElementById("scode").checked){
+		if(ts>100){
+			scontext.fillStyle = "#000000";
+		}
+		else{
+			scontext.fillStyle = "#FFFFFF";
+		}
+		scontext.font="12px sans-serif";
+		scontext.fillText(scode.toUpperCase(), px*24+2, py*24+22);
+	} 
+	px++;
+	if(px==wn || (px-1)*minpx>width){
+		px=0;
+		py++;
+	}
+	if(py<hn && (py-1)*minpx<height){
+		setTimeout(function(){setcolor(px, py, wn, hn, minpx)}, 0);
+	}
+	else{
+		var i, j=0, th = "<table border=1><tr><td>线号</td><td>格仑布线号</td><td>线名</td><td>颜色</td><td>格数</td></tr>";
+		for(i=0; i<dmc.length; i++){
+			if(dmc[i].num){
+				scode = i.toString(16);
+				if(scode.length == 1){
+					scode = "00"+scode;
+				}
+				else if(scode.length == 2){
+					scode = "0"+scode;
+				}
+				th += "<tr><td>"+dmc[i].code+"</td><td>"+scode+"</td><td>"+dmc[i].name+"</td><td style='width: 50px; background: #"+dmc[i].rgb+"'></td><td>"+dmc[i].num+"</td></tr>";
+			}
+		}
+		th += "</table>";
+		document.getElementById("line").innerHTML = th;
+		getImage();
+	}
+}
+
+function getImage(){
+	document.getElementById('imgoutput').src = document.getElementById("stitch").toDataURL();
+	document.getElementById("stitch").style.display = 'none';
+	document.getElementById('imgoutput').style.display = 'block';
+}
+</script>
+</body>
+</html>
